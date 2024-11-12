@@ -3,7 +3,13 @@
 #include <string.h>
 
 #define DATA_PATH "data/data.csv"
-#define CLEAR_CMD "cls"
+
+// define CLEAR_CMD at compile time depending on platform
+#if defined(_WIN32) || defined(__MINGW32__)
+    #define CLEAR_CMD "cls"
+#else
+    #define CLEAR_CMD "clear"
+#endif
 
 typedef struct {
     int reg;
@@ -404,81 +410,82 @@ int remStd(int *len){
     printf("ID (x to cancel): ");
     scanf("%s", inp);
     int inplen = strlen(inp), idx = -1;
-    if (inp[0] == 'x' || inp[0] == 'X'){
+    
+    // check for exit command in user input;
+    if ((inp[0] == 'x' || inp[0] == 'X') && inplen == 1){
         printf("Action cancelled. sending you back to main menu...\n");
         printf("========================================\n");
         return 2;
     }
-    else if (inplen != 11 && inplen != 4){
+
+    if (inplen != 11 && inplen != 4){
         printf("Invalid ID!\n");
         printf("========================================\n");
         return 1;
     }
-    else {
-        FILE *f = fopen(DATA_PATH, "r");
-        char line[256];
-        int i = 0, fnd = 0;
-        Student* d = calloc(*len, sizeof(Student));
-        while (fgets(line, sizeof(line), f)) {
-            removeTrailingNewline(line);
-            if (sscanf(line, "%[^,],%[^,],%[^,],%d,%[^,],%[^,]", d[i].id, d[i].name, d[i].nick, &d[i].course, d[i].email, d[i].phone) == 6) {
-                i++;     
+    FILE *f = fopen(DATA_PATH, "r");
+    char line[256];
+    int i = 0, fnd = 0;
+    Student* d = calloc(*len, sizeof(Student));
+    while (fgets(line, sizeof(line), f)) {
+        removeTrailingNewline(line);
+        if (sscanf(line, "%[^,],%[^,],%[^,],%d,%[^,],%[^,]", d[i].id, d[i].name, d[i].nick, &d[i].course, d[i].email, d[i].phone) == 6) {
+            i++;     
+        }
+    }
+    fclose(f);
+    for (int j = 0; j < i; j++) {
+        if (inplen == 4) {
+            char subId[5] = {d[j].id[7], d[j].id[8], d[j].id[9], d[j].id[10], '\0'};
+            if (strcmp(subId, inp) == 0) {
+                idx = j;
+                fnd = 1;
+                break;
+                }
+        } else {
+            if (strcmp(d[j].id, inp) == 0) {
+                idx = j;
+                fnd = 1;
+                break;
             }
         }
-        fclose(f);
-        for (int j = 0; j < i; j++) {
-            if (inplen == 4) {
-                char subId[5] = {d[j].id[7], d[j].id[8], d[j].id[9], d[j].id[10], '\0'};
-                if (strcmp(subId, inp) == 0) {
-                    idx = j;
-                    fnd = 1;
-                    break;
-                }
-            } else {
-                if (strcmp(d[j].id, inp) == 0) {
-                    idx = j;
-                    fnd = 1;
-                    break;
-                }
-            }
-        }
-        if (fnd < 1){
-            printf("ID %s not found! returning to main menu...\n", inp);
+    }
+    if (fnd < 1){
+        printf("ID %s not found! returning to main menu...\n", inp);
+        printf("========================================\n");
+        free(d);
+        return 1;
+    }
+    char* name = calloc(strlen(d[idx].name), sizeof(char));
+    strcpy(name, d[idx].name);
+    printf("Do you want to proceed with the deletion of %s? (y/N): ", name);
+    scanf("%s", inp);
+    if (inp[0] == 'y' || inp[0] == 'Y'){
+        f = fopen(DATA_PATH, "w");
+        if (f == NULL){
+            printf("[ERR] Cannot open %s . Cancelling and returning to main menu...\n", DATA_PATH);
             printf("========================================\n");
             free(d);
+            free(name);
             return 1;
         }
-        char* name = calloc(strlen(d[idx].name), sizeof(char));
-        strcpy(name, d[idx].name);
-        printf("Do you want to proceed with the deletion of %s? (y/N): ", name);
-        scanf("%s", inp);
-        if (inp[0] == 'y' || inp[0] == 'Y'){
-            f = fopen(DATA_PATH, "w");
-            if (f == NULL){
-                printf("[ERR] Cannot open %s . Cancelling and returning to main menu...\n", DATA_PATH);
-                printf("========================================\n");
-                free(d);
-                free(name);
-                return 1;
-            }
-            removeElementFromArray(d, len, idx);
-            for(int k = 0; k < *len; k++){
-                fprintf(f, "%s,%s,%s,%d,%s,%s\n", d[k].id, d[k].name, d[k].nick, d[k].course, d[k].email, d[k].phone);
-            }
-            fclose(f);
-            free(d);
-            printf("%s has been successfully removed.\n", name);
-            printf("========================================\n");
-            free(name);
-            return 0;
+        removeElementFromArray(d, len, idx);
+        for(int k = 0; k < *len; k++){
+            fprintf(f, "%s,%s,%s,%d,%s,%s\n", d[k].id, d[k].name, d[k].nick, d[k].course, d[k].email, d[k].phone);
         }
-        else {
-            printf("Action cancelled. sending you back to main menu...\n");
-            printf("========================================\n");
-            free(d);
-            free(name);
-            return 2;
-        }
+        fclose(f);
+        free(d);
+        printf("%s has been successfully removed.\n", name);
+        printf("========================================\n");
+        free(name);
+        return 0;
+    }
+    else {
+        printf("Action cancelled. sending you back to main menu...\n");
+        printf("========================================\n");
+        free(d);
+        free(name);
+        return 2;
     }
 }
 
