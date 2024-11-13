@@ -38,7 +38,7 @@ void countDataLine(int *len) {
   char c;
   FILE *f = fopen(DATA_PATH, "r");
   if (f == NULL) {
-    printf("Could not open file %s", DATA_PATH);
+    printf("[ERR] Could not open file %s\n", DATA_PATH);
     *len = -1;
   }
   while ((c = getc(f)) != EOF) {
@@ -118,7 +118,7 @@ int sortDataFile(int len) {
   Student *d = calloc(len, sizeof(Student));
   FILE *f = fopen(DATA_PATH, "r");
   if (f == NULL) {
-    printf("[ERR] Cannot read %s while sorting.", DATA_PATH);
+    printf("[ERR] Cannot read %s while sorting.\n", DATA_PATH);
     return 1;
   }
   while (fgets(line, sizeof(line), f)) {
@@ -591,6 +591,28 @@ int remStd(int *len) {
   }
 }
 
+void printTheEntireFuckingThing() {
+  FILE *f = fopen(DATA_PATH, "r");
+  char line[256];
+  Student cur = {0};
+  int m = 0;
+  printf("===========Print Everyone==========\n");
+  printf("Results: \n");
+  while (fgets(line, sizeof(line), f)) {
+    removeTrailingNewline(line);
+    if (sscanf(line, "%[^,],%[^,],%[^,],%d,%[^,],%[^,]", cur.id, cur.name,
+               cur.nick, &cur.course, cur.email, cur.phone) == 6) {
+      if (m == 0)
+        printResHeader();
+      printSearchResultLine(cur);
+      m++;
+    }
+  }
+  fclose(f);
+  printf("Total match: %d\n", m);
+  printf("========================================\n");
+}
+
 void helpCmd() {
   printf("==========CPE38 Students List==========\n");
   printf("[ C ] for students count\n");
@@ -605,6 +627,7 @@ void helpCmd() {
 
 int main() {
   int len;
+  char buf[20];
   char c;
   countDataLine(&len);
 
@@ -612,12 +635,13 @@ int main() {
     printf("[ERR] Data file not found! Exiting...");
     return 1;
   }
-
+  system(CLEAR_CMD);
   helpCmd();
 
   while (1) {
     printf("Command: ");
-    scanf(" %c", &c);
+    scanf(" %s", buf);
+    c = buf[0];
     if (c >= 'a' && c <= 'z')
       c -= 32;
     if (c == 'X')
@@ -634,10 +658,13 @@ int main() {
       addStd(&len); // TODO: check fn return value for status
     else if (c == 'R')
       remStd(&len); // TODO: check fn return value for status
+    else if (c == 'E')
+      printTheEntireFuckingThing();
     else if (c == 'I')
       searchById();
     else {
-      printf("Invalid command! try again.\n");
+      printf(
+          "Invalid command! try again. (or try 'h' for a list of commands)\n");
       continue;
     }
   }
