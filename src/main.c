@@ -297,17 +297,14 @@ CheckDuplicateResponse checkDuplicate(Student x, int len) {
                cur.nick, &cur.course, cur.email, cur.phone) == 6) {
       if (strcmp(cur.id, x.id) == 0) {
         r.id = 1;
-        printf("[DEBUG] dupe id \n");
       }
 
       if (strcmp(cur.name, x.name) == 0) {
         r.name = 1;
-        printf("[DEBUG] dupe name \n");
       }
 
       if (strcmp(cur.email, x.email) == 0) {
         r.email = 1;
-        printf("[DEBUG] dupe email \n");
       }
     }
   }
