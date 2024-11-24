@@ -40,6 +40,7 @@ void countDataLine(int *len) {
   if (f == NULL) {
     printf("[ERR] Could not open file %s\n", DATA_PATH);
     *len = -1;
+    return;
   }
   while ((c = getc(f)) != EOF) {
     if (c == '\n')
