@@ -33,15 +33,28 @@ typedef struct {
   int email;
 } CheckDuplicateResponse;
 
+
+/**
+ * FUNTCION: countDataLine - count each line of data file
+ *
+ * - int *len: pointer to integer to store line count
+ *
+ *  explanation: 
+ *  getc() function get next character from the stream. so the while loop essentialy go through each character one by one, counting '\n'
+ */
 void countDataLine(int *len) {
   *len = 0;
   char c;
   FILE *f = fopen(DATA_PATH, "r");
+
+  /** if pointer to file is null, return -1 which signifies that the data file can't be open */
   if (f == NULL) {
     printf("[ERR] Could not open file %s\n", DATA_PATH);
     *len = -1;
     return;
   }
+
+  /** loop through each characters in data file to count newline character */
   while ((c = getc(f)) != EOF) {
     if (c == '\n')
       (*len)++;
@@ -49,6 +62,13 @@ void countDataLine(int *len) {
   fclose(f);
 }
 
+/**
+ * FUNTCION: getCourseName - convert course value in data file from int to its name
+ *
+ * - char name[]: pointer to character array to store course name value
+ * - int course: course value
+ *
+ */
 void getCourseName(char name[], int course) {
   if (course == 0)
     strcpy(name, "REG");
@@ -61,8 +81,9 @@ void getCourseName(char name[], int course) {
 }
 
 /**
- * printResHeader - print header for search result
+ * FUNTCION: printResHeader - print header for search result
  *
+ * EXPLAINATION:
  * explanation for format string: %-[num]
  *  - : left-align
  *  num: amount of characters for that slot
@@ -73,10 +94,11 @@ void printResHeader() {
 }
 
 /**
- * printSearchResultLine - print a line of each result
+ * FUNTCION: printSearchResultLine - print a line of each result
  *
  * - Student cur: 1 student structure
  *
+ * EXPLAINATION:
  *  explanation for format string: %-[num]
  *  - : left-align
  *  num: amount of characters for that slot
@@ -88,11 +110,27 @@ void printSearchResultLine(Student cur) {
          courseName, cur.email, cur.phone);
 }
 
+/**
+ * removeTrailingNewLine - remove '\n' from data line
+ * 
+ *  - char line[]: pointer to data line string
+ */
 void removeTrailingNewline(char line[]) {
   if (line[strlen(line) - 1] == '\n')
     line[strlen(line) - 1] = '\0';
 }
 
+/**
+ * FUNTCION: removeElementFromArray - as the name suggested, remove specific element from array
+ * 
+ * - Student *arr: array of Students
+ * - int *len: pointer to data line count value
+ * - int idx: index of element to be removed
+ * 
+ * EXPLAINATION:
+ * this function remove element from a Student array at the index provided. it work by
+ * shifting the next element from idx+1 to len-1 by -1
+ */
 void removeElementFromArray(Student *arr, int *len, int idx) {
   if (idx >= 0 && idx < *len) {
     for (int i = idx; i < (*len) - 1; i++)
@@ -101,6 +139,17 @@ void removeElementFromArray(Student *arr, int *len, int idx) {
   }
 }
 
+/**
+ * FUNTCION: insertionSort - also as the name suggested, insertion sort algorithm
+ * 
+ * - Student *arr: array of Students
+ * - int n: array length
+ * 
+ * EXPLAINATION:
+ * insertion sort works by repeatedly taking an unsorted element 
+ * and inserting it into its correct position among the previously sorted elements, 
+ * shifting other elements as needed. 
+ */
 void insertionSort(Student *arr, int n) {
   for (int j = 1; j < n; j++) {
     Student temp = arr[j];
@@ -113,15 +162,37 @@ void insertionSort(Student *arr, int n) {
   }
 }
 
+/**
+ * FUNTCION: sortDataFile - open data file and sort it
+ * 
+ * - int len: data line count value
+ * 
+ * EXPLAINATION:
+ * reading data file into variable, sort it using insertionSort() order by id, 
+ * then write it back to data file
+ */
 int sortDataFile(int len) {
+  /**
+   * declare line to store each line from data file, also declare i to 
+   * use as an iterator
+   */
   char line[256];
   int i = 0;
+
+  /**
+   * allocate memory for an array of Students and declare file pointer.
+   * if the file doesn't exist, return out of this function
+   */
   Student *d = calloc(len, sizeof(Student));
   FILE *f = fopen(DATA_PATH, "r");
   if (f == NULL) {
     printf("[ERR] Cannot read %s while sorting.\n", DATA_PATH);
     return 1;
   }
+
+  /**
+   * read data file into student array *d
+   */
   while (fgets(line, sizeof(line), f)) {
     removeTrailingNewline(line);
     if (sscanf(line, "%[^,],%[^,],%[^,],%d,%[^,],%[^,]", d[i].id, d[i].name,
@@ -130,6 +201,11 @@ int sortDataFile(int len) {
     }
   }
   fclose(f);
+
+  /** 
+   * sort the array with insertion sort then write the sorted data
+   * back to the data file 
+   */
   insertionSort(d, i);
   char *buffer = malloc(170 * i);
   f = fopen(DATA_PATH, "w");
@@ -138,9 +214,18 @@ int sortDataFile(int len) {
             d[j].course, d[j].email, d[j].phone);
   }
   fclose(f);
+  free(d);
   return 0;
 }
 
+/**
+ * FUNTCION: searchById() 
+ * COMMAND: search student by id
+ * 
+ * EXPLAINATION:
+ * prompt user for id to query, then do a linear search 
+ * through the data file, then print search result 
+ */
 void searchById() {
   char inp[20];
   int m = 0;
@@ -184,6 +269,14 @@ void searchById() {
   }
 }
 
+/**
+ * FUNTCION: searchByFirstName() 
+ * COMMAND: search student by firstname
+ * 
+ * EXPLAINATION:
+ * prompt user for firstname (or partial firstname) to query, 
+ * then do a linear search through the data file, then print search result 
+ */
 void searchByFirstName() {
   char inp[20];
   int m = 0, inplen = 0;
@@ -224,6 +317,14 @@ void searchByFirstName() {
   printf("========================================\n");
 }
 
+/**
+ * FUNCTION: searchByNickName
+ * COMMAND: search for student(s) by nickname
+ * 
+ * EXPLAINATION:
+ * prompt user for nickname (or partial nickname) to query, 
+ * then do a linear search through the data file, then print search result 
+ */
 void searchByNickName() {
   char inp[20], line[256];
   int m = 0, inplen;
@@ -261,6 +362,14 @@ void searchByNickName() {
   printf("========================================\n");
 }
 
+/**
+ * FUNCTION: allStdCount
+ * COMMAND: print student count
+ * 
+ * EXPLAINATION:
+ * count all students in data file then print it.
+ * show all sum value and student count in each course
+ */
 void allStdCount() {
   FILE *f = fopen(DATA_PATH, "r");
   Count c = {0};
@@ -287,6 +396,16 @@ void allStdCount() {
   printf("========================================\n");
 }
 
+/**
+ * FUNCTION: checkduplicate - for addStd()
+ * 
+ * - Student x: student data to check
+ * - int len: data file length
+ * 
+ * EXPLAINATION:
+ * check if student (or some of their data) already existed
+ * in the data file
+ */
 CheckDuplicateResponse checkDuplicate(Student x, int len) {
   CheckDuplicateResponse r = {0};
   char line[256];
@@ -313,6 +432,16 @@ CheckDuplicateResponse checkDuplicate(Student x, int len) {
   return r;
 }
 
+/**
+ * FUNCTION: addStd
+ * COMMAND: add student to data file
+ * 
+ * - int *len: pointer to data file line count
+ * 
+ * EXPLAINATION:
+ * add one student to the data file. will prompt user for 
+ * each data required and check for data validity
+ */
 int addStd(int *len) {
   Student *x = malloc(sizeof(Student));
   char buffer[255];
@@ -425,6 +554,8 @@ int addStd(int *len) {
   // endsection
 
   // data duplication checking
+  // fd means fatal duplication: will not allow user to proceed
+  // d means duplication: will prompt user for confirmation before proceeding
   CheckDuplicateResponse dr = checkDuplicate(*x, *len);
   if (dr.id == 1) {
     fd = 1;
@@ -500,6 +631,16 @@ int addStd(int *len) {
   return 0;
 }
 
+/**
+ * FUNCTION: remStd
+ * COMMAND: remove student from data file
+ * 
+ * - int *len: pointer to data file line count
+ * 
+ * EXPLAINATION:
+ * remove one student from data file. will prompt user for
+ * student id (or shorthand id) of the student to be removed
+ */
 int remStd(int *len) {
   char inp[20];
   system(CLEAR_CMD);
@@ -589,6 +730,14 @@ int remStd(int *len) {
   }
 }
 
+/**
+ * FUNCTION: printTheEntireFlippingThing
+ * COMMAND: print every row of data file
+ * 
+ * EXPLAINATION:
+ * this should actually be undocumented as 
+ * it is just a debug function used in development
+ */
 void printTheEntireFuckingThing() {
   FILE *f = fopen(DATA_PATH, "r");
   char line[256];
@@ -611,6 +760,13 @@ void printTheEntireFuckingThing() {
   printf("========================================\n");
 }
 
+/**
+ * FUNCTION: helpCmd
+ * COMMAND: show command list
+ * 
+ * EXPLAINATION:
+ * self explaining. show list of command.
+ */
 void helpCmd() {
   printf("==========CPE38 Students List==========\n");
   printf("[ C ] for students count\n");
@@ -623,44 +779,78 @@ void helpCmd() {
   printf("[ X ] to exit the program\n");
 }
 
+/**
+ * FUNCTION: main - where the magic began
+ */
 int main() {
+  /**
+   * initiate len to store data file line count.
+   * this will be a main source of truth for
+   * any function that need data line count
+   */
   int len;
+
+  /**
+   * initiate buffer to store user input in 
+   * main menu, and initiate c to store 
+   * character to be use as commands
+   */
   char buf[20];
   char c;
-  countDataLine(&len);
 
+  /**
+   * count data lines and store it in len,
+   * if the file does not exist, exit the process
+   */
+  countDataLine(&len);
   if (len < 0) {
     printf("[ERR] Data file not found! Exiting...");
     return 1;
   }
+
+  /**
+   * clear terminal and display list of commands
+   */
   system(CLEAR_CMD);
   helpCmd();
 
+  /**
+   * main process loop
+   */
   while (1) {
+    /**
+     * prompt user for commands and store it 
+     * in buffer variable, then get the first letter
+     * for the command
+     */
     printf("Command: ");
     scanf(" %s", buf);
     c = buf[0];
+
+    /**
+     * change all lowercase alphabet to uppercase
+     */
     if (c >= 'a' && c <= 'z')
       c -= 32;
-    if (c == 'X')
+    if (c == 'X') // exit command
       break;
-    else if (c == 'H')
+    else if (c == 'H') // show list of commands
       helpCmd();
-    else if (c == 'N')
+    else if (c == 'N') // search by nickname
       searchByNickName();
-    else if (c == 'F')
+    else if (c == 'F') // search by firstname
       searchByFirstName();
-    else if (c == 'C')
+    else if (c == 'C') // show student count
       allStdCount();
-    else if (c == 'A')
-      addStd(&len); // TODO: check fn return value for status
-    else if (c == 'R')
-      remStd(&len); // TODO: check fn return value for status
-    else if (c == 'E')
+    else if (c == 'A') // add student to data file
+      addStd(&len);
+    else if (c == 'R') // remove student file
+      remStd(&len);
+    else if (c == 'E') // TODO: remove this
       printTheEntireFuckingThing();
     else if (c == 'I')
       searchById();
-    else {
+    else {             // if c doesn't match any of out commands, display invalid command message
       printf(
           "Invalid command! try again. (or try 'h' for a list of commands)\n");
       continue;
