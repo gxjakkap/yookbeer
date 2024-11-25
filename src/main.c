@@ -111,7 +111,7 @@ void printSearchResultLine(Student cur) {
 }
 
 /**
- * removeTrailingNewLine - remove '\n' from data line
+ * FUNCTION: removeTrailingNewLine - remove '\n' from data line
  * 
  *  - char line[]: pointer to data line string
  */
@@ -227,24 +227,54 @@ int sortDataFile(int len) {
  * through the data file, then print search result 
  */
 void searchById() {
+  /**
+   * declare inp as input buffer variable and m as a
+   * match counter, then prompt user for id (or partial id) 
+   * to query 
+   */
   char inp[20];
   int m = 0;
   system(CLEAR_CMD);
   printf("==============Search by ID==============\n");
   printf("ID: ");
   scanf("%s", inp);
+
+  /**
+   * determine if user's input is a full id or partial id
+   * 
+   * full id: 11 digits
+   * partial id: 4 digits
+   * 
+   * if user's input doesn't match either of the above, 
+   * print "Invalid ID" and return to main menu
+   */
   int inplen = strlen(inp);
   if (inplen != 11 && inplen != 4) {
     printf("Invalid ID!\n");
-  } else {
+  } 
+  else {
+    /**
+     * open data file and declare a buffer variable for
+     * 1 line of data, declare a student object to store
+     * student's data from the current line being read
+     */
     FILE *f = fopen(DATA_PATH, "r");
     char line[256];
     Student cur = {0};
     printf("Results: \n");
+
+    /**
+     * read through the file line by line, parse the data
+     * into `cur` object. if cur.id match user input, print
+     * the result
+     */
     while (fgets(line, sizeof(line), f)) {
       removeTrailingNewline(line);
       if (sscanf(line, "%[^,],%[^,],%[^,],%d,%[^,],%[^,]", cur.id, cur.name,
                  cur.nick, &cur.course, cur.email, cur.phone) == 6) {
+        /**
+         * for partial id: substring cur.id to last 4 digits in subId
+         */
         if (inplen == 4) {
           char subId[5] = {cur.id[7], cur.id[8], cur.id[9], cur.id[10]};
           if (strcmp(subId, inp) == 0) {
@@ -253,7 +283,8 @@ void searchById() {
             printSearchResultLine(cur);
             m++;
           }
-        } else {
+        } 
+        else {
           if (strcmp(cur.id, inp) == 0) {
             if (m == 0)
               printResHeader();
@@ -278,27 +309,52 @@ void searchById() {
  * then do a linear search through the data file, then print search result 
  */
 void searchByFirstName() {
+  /**
+   * declare inp as input buffer variable and m as a
+   * match counter, then prompt user for first (or partial firstname) 
+   * to query 
+   */
   char inp[20];
   int m = 0, inplen = 0;
   system(CLEAR_CMD);
   printf("===========Search by Firstname==========\n");
   printf("Name: ");
   scanf("%s", inp);
+
+  /**
+   * get user's query length and shift any lowercase
+   * character to uppercase
+   */
   inplen = strlen(inp);
   for (int j = 0; j < inplen; j++) {
     if (inp[j] >= 'a' && inp[j] <= 'z')
       inp[j] -= 32;
   }
+
+  /**
+    * open data file and declare a buffer variable for
+    * 1 line of data, declare a student object to store
+    * student's data from the current line being read
+    */
   FILE *f = fopen(DATA_PATH, "r");
   char line[256], fnm[16];
   Student cur = {0};
   printf("Results: \n");
+
+  /**
+    * read through the file line by line, parse the data
+    * into `cur` object. then substring cur.name into the
+    * same length as user's query to allow partial name search
+    * (subStr). if user's query match subStr, print that student
+    * to result. since we allow partial name search, multiple 
+    * matches are possible.
+    */
   while (fgets(line, sizeof(line), f)) {
     removeTrailingNewline(line);
     if (sscanf(line, "%[^,],%[^,],%[^,],%d,%[^,],%[^,]", cur.id, cur.name,
                cur.nick, &cur.course, cur.email, cur.phone) == 6) {
       if (sscanf(cur.name, "%s %*s", fnm) == 1) {
-        char subStr[20];
+        char *subStr = calloc(inplen, sizeof(char)); // use calloc to allocate a string with inplen size
         for (int j = 0; j < inplen; j++) {
           subStr[j] = fnm[j];
         }
@@ -326,25 +382,50 @@ void searchByFirstName() {
  * then do a linear search through the data file, then print search result 
  */
 void searchByNickName() {
+  /**
+   * declare inp as input buffer variable, line as a buffer for 
+   * data file reading, and m as a match counter, then prompt user 
+   * for nickname (or partial nickname) to query 
+   */
   char inp[20], line[256];
   int m = 0, inplen;
   system(CLEAR_CMD);
   printf("=============Search by Nick=============\n");
   printf("Nickname: ");
   scanf("%s", inp);
+
+  /**
+   * get user's query length and shift any lowercase
+   * character to uppercase
+   */
   inplen = strlen(inp);
   for (int j = 0; j < inplen; j++) {
     if (inp[j] >= 'a' && inp[j] <= 'z')
       inp[j] -= 32;
   }
+
+  /**
+    * open data file and declare a buffer variable for
+    * 1 line of data, declare a student object to store
+    * student's data from the current line being read
+    */
   FILE *f = fopen(DATA_PATH, "r");
   Student cur = {0};
   printf("Results: \n");
+
+  /**
+    * read through the file line by line, parse the data
+    * into `cur` object. then substring cur.nickname into the
+    * same length as user's query to allow partial name search
+    * (subStr). if user's query match subStr, print that student
+    * to result. since we allow partial name search, multiple 
+    * matches are possible.
+    */
   while (fgets(line, sizeof(line), f)) {
     removeTrailingNewline(line);
     if (sscanf(line, "%[^,],%[^,],%[^,],%d,%[^,],%[^,]", cur.id, cur.name,
                cur.nick, &cur.course, cur.email, cur.phone) == 6) {
-      char subStr[20];
+      char *subStr = calloc(inplen, sizeof(char)); // use calloc to allocate a string with inplen size
       for (int j = 0; j < inplen; j++) {
         subStr[j] = cur.nick[j];
       }
@@ -371,10 +452,27 @@ void searchByNickName() {
  * show all sum value and student count in each course
  */
 void allStdCount() {
+  /**
+   * open data file and declare a Count object to store
+   * data. declare cur as an iterator and line as a buffer
+   * for reading each line of data file
+   */
   FILE *f = fopen(DATA_PATH, "r");
   Count c = {0};
   int cur = 0;
   char line[256];
+
+  /**
+   * read through each line of data file and count each courses'
+   * student using `COURSE` column in the data file
+   * 
+   * 0: Regular program
+   * 1: International program
+   * 2: Health Data Science program
+   * 3: Residential College program
+   * 
+   * then print the result down below
+   */
   while (fgets(line, sizeof(line), f)) {
     if (sscanf(line, "%*[^,],%*[^,],%*[^,],%d", &cur) == 1) {
       if (cur == 0)
@@ -404,9 +502,23 @@ void allStdCount() {
  * 
  * EXPLAINATION:
  * check if student (or some of their data) already existed
- * in the data file
+ * in the data file.
+ * 
+ * checkDuplicate() is used in the addStd() function to check,
+ * if the student user currently adding already existed in
+ * the data file. checkDuplicate() focuses on 3 values: id, email, name.
+ * it counts for the occurence of these 3 values in the data 
+ * file and return it back to addStd() where it determines if 
+ * the duplication is acceptable.
  */
 CheckDuplicateResponse checkDuplicate(Student x, int len) {
+  /**
+   * declaure CheckDuplicateResponse object to store results,
+   * line to store each line from data file, and cur to store
+   * data of student from current line being read. then we
+   * search through the file for duplicate and if found,
+   * increment value in result object by 1
+   */
   CheckDuplicateResponse r = {0};
   char line[256];
   FILE *f = fopen(DATA_PATH, "r");
@@ -416,15 +528,15 @@ CheckDuplicateResponse checkDuplicate(Student x, int len) {
     if (sscanf(line, "%[^,],%[^,],%[^,],%d,%[^,],%[^,]", cur.id, cur.name,
                cur.nick, &cur.course, cur.email, cur.phone) == 6) {
       if (strcmp(cur.id, x.id) == 0) {
-        r.id = 1;
+        r.id++;
       }
 
       if (strcmp(cur.name, x.name) == 0) {
-        r.name = 1;
+        r.name++;
       }
 
       if (strcmp(cur.email, x.email) == 0) {
-        r.email = 1;
+        r.email++;
       }
     }
   }
@@ -642,6 +754,10 @@ int addStd(int *len) {
  * student id (or shorthand id) of the student to be removed
  */
 int remStd(int *len) {
+  /**
+   * declare input buffer and prompt user for
+   * id (or partial id) to remove
+   */
   char inp[20];
   system(CLEAR_CMD);
   printf("==============Remove Student============\n");
@@ -656,11 +772,21 @@ int remStd(int *len) {
     return 2;
   }
 
+  /**
+   * if user's input doesn't match id or partial id
+   * length, print "Invalid ID" and return to
+   * main meny
+   */
   if (inplen != 11 && inplen != 4) {
     printf("Invalid ID!\n");
     printf("========================================\n");
     return 1;
   }
+
+  /**
+   * open data file and read the entire file into
+   * Student object array.
+   */
   FILE *f = fopen(DATA_PATH, "r");
   char line[256];
   int i = 0, fnd = 0;
@@ -673,7 +799,14 @@ int remStd(int *len) {
     }
   }
   fclose(f);
+
+  /**
+   * search for specified student (if student is found, set `fnd` = 1)
+   */
   for (int j = 0; j < i; j++) {
+    /**
+     * for partial id: substring id to last 4 digits before comparing
+     */
     if (inplen == 4) {
       char subId[5] = {d[j].id[7], d[j].id[8], d[j].id[9], d[j].id[10], '\0'};
       if (strcmp(subId, inp) == 0) {
@@ -681,7 +814,8 @@ int remStd(int *len) {
         fnd = 1;
         break;
       }
-    } else {
+    } 
+    else {
       if (strcmp(d[j].id, inp) == 0) {
         idx = j;
         fnd = 1;
@@ -689,17 +823,36 @@ int remStd(int *len) {
       }
     }
   }
+
+  /**
+   * if no student is found, return to main menu
+   */
   if (fnd < 1) {
     printf("ID %s not found! returning to main menu...\n", inp);
     printf("========================================\n");
     free(d);
     return 1;
   }
+
+  /**
+   * copy student's name to new variable to use in print 
+   * function after student's data got removed
+   */
   char *name = calloc(strlen(d[idx].name), sizeof(char));
   strcpy(name, d[idx].name);
+
+  /**
+   * prompt user for confirmation, if user cancelled the
+   * action, return to main menu
+   */
   printf("Do you want to proceed with the deletion of %s? (y/N): ", name);
   scanf("%s", inp);
   if (inp[0] == 'y' || inp[0] == 'Y') {
+
+    /**
+     * open data file in write mode. if data file cant be opened,
+     * print error and return to main menu.
+     */
     f = fopen(DATA_PATH, "w");
     if (f == NULL) {
       printf(
@@ -710,6 +863,10 @@ int remStd(int *len) {
       free(name);
       return 1;
     }
+    /**
+     * remove specified student from data array then
+     * write it back to data file, overwriting old data
+     */
     removeElementFromArray(d, len, idx);
     for (int k = 0; k < *len; k++) {
       fprintf(f, "%s,%s,%s,%d,%s,%s\n", d[k].id, d[k].name, d[k].nick,
@@ -721,7 +878,8 @@ int remStd(int *len) {
     printf("========================================\n");
     free(name);
     return 0;
-  } else {
+  } 
+  else {
     printf("Action cancelled. sending you back to main menu...\n");
     printf("========================================\n");
     free(d);
@@ -850,7 +1008,7 @@ int main() {
       printTheEntireFuckingThing();
     else if (c == 'I')
       searchById();
-    else {             // if c doesn't match any of out commands, display invalid command message
+    else {  // if c doesn't match any of out commands, display invalid command message
       printf(
           "Invalid command! try again. (or try 'h' for a list of commands)\n");
       continue;
