@@ -627,7 +627,7 @@ int addStd(int *len) {
   // getting input for student course
   printf("Student's course (0 for REG, 1 for INTER, 2 for HDS, 3 for RC): ");
   scanf("%d", &x->course);
-  if (x->course < 0 && x->course > 3) {
+  if (x->course < 0 || x->course > 3) {
     printf("Invalid course! returning to main menu.\n");
     free(x);
     return 1;
